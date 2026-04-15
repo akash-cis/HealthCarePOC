@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Call Intelligence - Executive Demo</title>
+    <!-- Modern Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --accent: #10b981;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1, h2, h3 { font-family: 'Outfit', sans-serif; }
+        
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.5s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header { text-align: center; margin-bottom: 1rem; }
+        .header h1 { font-size: 2.8rem; margin: 0; background: linear-gradient(90deg, #60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header p { color: var(--text-muted); font-size: 1.1rem; }
+
+        .transcript-box {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 1.5rem;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #cbd5e1;
+            white-space: pre-wrap;
+            border: 1px solid var(--glass-border);
+            margin-bottom: 1.5rem;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.85rem 1.75rem;
+            font-size: 1.1rem;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .btn:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.5); }
+        .btn:disabled { background: #475569; cursor: not-allowed; transform: none; box-shadow: none; opacity: 0.7;}
+        
+        .btn-success { background: var(--accent); box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4); }
+        .btn-success:hover { background: #059669; box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.5); }
+
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            display: none;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Step 2 AI Summary Layout */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .metric-badge {
+            display: inline-block;
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            padding: 0.35rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .hidden { display: none !important; }
+
+        .status-msg { margin-top: 1.2rem; text-align: center; color: #34d399; font-weight: 500; font-family: 'Outfit'; font-size: 1.2rem; }
+        .error-msg { margin-top: 1.2rem; text-align: center; color: #ef4444; font-weight: 500; font-family: 'Outfit'; font-size: 1.1rem; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+
+        /* Markdown styling inside summary */
+        .markdown-content h2 { margin-top: 1.5rem; font-size: 1.4rem; color: #a78bfa; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;}
+        .markdown-content h3 { margin-top: 1rem; font-size: 1.15rem; color: #93c5fd;}
+        .markdown-content ul { padding-left: 1.5rem; margin-top: 0.5rem; }
+        .markdown-content li { margin-bottom: 0.25rem; }
+        .markdown-content pre, .markdown-content code { background: rgba(0,0,0,0.4); padding: 0.2rem 0.4rem; border-radius: 4px; font-family: monospace;}
+        .markdown-content strong { color: #f8fafc; font-weight: 600;}
+        
+        /* Highlight specific elements */
+        .highlight { color: #60a5fa; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header glass-panel" style="animation-delay: 0s;">
+        <h1>Clinical Call Intelligence</h1>
+        <p>End-to-End Generative AI Pipeline & Salesforce Native Integration</p>
+    </div>
+
+    <!-- Step 1: Transcript -->
+    <div class="glass-panel" id="step1" style="animation-delay: 0.1s;">
+        <h2 style="margin-top:0;">1. Raw Call Transcript</h2>
+        <p class="text-muted" style="margin-top: -10px; margin-bottom: 15px; font-size: 0.95rem;">Extracted raw conversation stream from telemedicine session.</p>
+        <div class="transcript-box" id="transcriptText">Loading transcript from secure storage...</div>
+        <button class="btn" id="btnSummarize" onclick="summarizeTranscript()">
+            <span class="loading-spinner" id="spinnerSummarize"></span>
+            <span id="textSummarize">✨ Analyze Call via Groq AI (Llama-3.3)</span>
+        </button>
+    </div>
+
+    <!-- Step 2: AI Summary -->
+    <div class="glass-panel hidden" id="step2" style="animation-delay: 0.1s;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem;">
+            <h2 style="margin:0;">2. AI Extracted Clinical Insights</h2>
+            <div class="metric-badge" id="sentimentBadge">Sentiment: Processing...</div>
+        </div>
+        <div class="summary-grid" style="margin-top: 1rem;">
+            <div class="transcript-box markdown-content" id="summaryBox" style="height: 480px; max-height: 480px;"></div>
+        </div>
+        <button class="btn btn-success" id="btnPush" onclick="pushToSalesforce()">
+            <span class="loading-spinner" id="spinnerPush"></span>
+            <span id="textPush">☁️ Seamlessly Push Opportunity to Salesforce</span>
+        </button>
+        <div class="status-msg hidden" id="sfStatusMsg">🎉 Opportunity details successfully pushed and created in Salesforce!</div>
+        <div class="error-msg hidden" id="sfErrorMsg">❌ Failed to push to Salesforce. Please check terminal logs.</div>
+    </div>
+</div>
+
+<!-- Simple markdown parser for demo UI rendering -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<script>
+    let currentData = { transcript: "", insights: {} };
+
+    // On Load: Fetch Transcript
+    document.addEventListener("DOMContentLoaded", async () => {
+        try {
+            const res = await fetch("/api/demo/transcript");
+            const data = await res.json();
+            currentData.transcript = data.transcript;
+            // Typewriter effect
+            document.getElementById("transcriptText").textContent = data.transcript;
+        } catch (err) {
+            document.getElementById("transcriptText").textContent = "Error loading transcript.";
+        }
+    });
+
+    async function summarizeTranscript() {
+        const btn = document.getElementById("btnSummarize");
+        const spinner = document.getElementById("spinnerSummarize");
+        const text = document.getElementById("textSummarize");
+        
+        btn.disabled = true;
+        spinner.style.display = "inline-block";
+        text.textContent = "Processing LLM Matrix...";
+
+        try {
+            const res = await fetch("/api/demo/summarize", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ transcript: currentData.transcript })
+            });
+            const data = await res.json();
+            currentData.insights = data.insights;
+
+            // Render Markdown Output
+            document.getElementById("summaryBox").innerHTML = marked.parse(data.insights.summary);
+            document.getElementById("sentimentBadge").textContent = `Predicted Sentiment: ${data.insights.sentiment.toUpperCase()}`;
+            
+            // Show Step 2
+            document.getElementById("step2").classList.remove("hidden");
+            
+            // Scroll to step 2 smooth
+            document.getElementById("step2").scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
+            text.textContent = "✓ Analytical Summary Generated";
+        } catch (err) {
+            text.textContent = "❌ Error Generating Summary";
+            btn.disabled = false;
+        } finally {
+            spinner.style.display = "none";
+        }
+    }
+
+    async function pushToSalesforce() {
+        const btn = document.getElementById("btnPush");
+        const spinner = document.getElementById("spinnerPush");
+        const text = document.getElementById("textPush");
+        
+        btn.disabled = true;
+        spinner.style.display = "inline-block";
+        text.textContent = "Handshaking with Salesforce API...";
+        document.getElementById("sfStatusMsg").classList.add("hidden");
+        document.getElementById("sfErrorMsg").classList.add("hidden");
+
+        try {
+            const res = await fetch("/api/demo/push", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                    transcript: currentData.transcript,
+                    insights: currentData.insights
+                })
+            });
+            const responseData = await res.json();
+            
+            if (!res.ok) { 
+                throw new Error(responseData.detail || "Failed specifically"); 
+            }
+
+            // Success
+            spinner.style.display = "none";
+            text.textContent = "✓ Opportunity Synced and Committed";
+            document.getElementById("sfStatusMsg").classList.remove("hidden");
+        } catch (err) {
+            spinner.style.display = "none";
+            text.textContent = "❌ Error Pushing Data";
+            document.getElementById("sfErrorMsg").textContent = "Error: " + err.message;
+            document.getElementById("sfErrorMsg").classList.remove("hidden");
+            btn.disabled = false;
+        }
+    }
+</script>
+
+</body>
+</html>
